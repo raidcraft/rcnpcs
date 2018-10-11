@@ -1,0 +1,7 @@
+name: RCNPCs
+main: de.raidcraft.npcs.RCNPCsPlugin
+version: ${project.version}#${build.number}
+author: Silthus
+website: www.raid-craft.de
+depend: [RaidCraft-API]
+database: true
