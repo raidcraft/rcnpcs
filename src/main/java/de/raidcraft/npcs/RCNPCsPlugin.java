@@ -8,6 +8,8 @@ import de.raidcraft.api.config.SimpleConfiguration;
 import de.raidcraft.api.items.CustomItemException;
 import de.raidcraft.util.CustomItemUtil;
 import lombok.Getter;
+import net.citizensnpcs.Citizens;
+import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,6 +34,10 @@ public class RCNPCsPlugin extends BasePlugin {
     @Override
     public void enable() {
         this.config = configure(new LocalConfiguration(this));
+        registerCommands(NpcCommands.class);
+
+        CitizensAPI.createNamedNPCRegistry(getName(), new CustomNpcDataStore(this));
+        Player player;
     }
 
     @Override
@@ -39,8 +45,6 @@ public class RCNPCsPlugin extends BasePlugin {
     }
 
     public class LocalConfiguration extends ConfigurationBase<RCNPCsPlugin> {
-
-
 
         public LocalConfiguration(RCNPCsPlugin plugin) {
             super(plugin, "config.yml");
