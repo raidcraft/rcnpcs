@@ -62,7 +62,7 @@ public class CustomNPCDataStore implements NPCDataStore {
         }
         this.loadedNPCConfigs.put(id, storage);
         if (isLoaded()) {
-            loadNpcFromConfig(CitizensAPI.getNamedNPCRegistry(getPlugin().getName()), id, storage.getKey(""));
+            loadNpcFromConfig(CitizensAPI.getNPCRegistry(), id, storage.getKey(""));
         }
     }
 
@@ -146,6 +146,7 @@ public class CustomNPCDataStore implements NPCDataStore {
             return;
         }
         npc.save(storage.getKey(""));
+        getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getName());
     }
 
     @Override
@@ -153,11 +154,13 @@ public class CustomNPCDataStore implements NPCDataStore {
         for (NPC npc : registry) {
             store(npc);
         }
+        getPlugin().getLogger().info("Stored all NPCs into custom save files.");
     }
 
     @Override
     public void reloadFromSource() {
         getLoadedNPCConfigs().values().forEach(YamlStorage::load);
+        getPlugin().getLogger().info("Reloaded Custom NPC Stores from disk.");
     }
 
     @SuppressWarnings("deprecation")

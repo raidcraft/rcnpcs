@@ -28,8 +28,8 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
         CitizensPlugin plugin = (CitizensPlugin) CitizensAPI.getPlugin();
         if (plugin != null) {
             plugin.setDefaultNPCDataStore(store);
+            getLogger().info("Enabled custom default NPC data store!");
         }
-        CitizensAPI.createNamedNPCRegistry(getName(), store);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
     @EventHandler
     public void onQuestConfigsLoaded(RCQuestConfigsLoaded event) {
 
-        getStore().loadInto(CitizensAPI.getNamedNPCRegistry(getName()));
+        getStore().loadInto(CitizensAPI.getNPCRegistry());
     }
 
     public class LocalConfiguration extends ConfigurationBase<RCNPCsPlugin> {
