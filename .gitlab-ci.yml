@@ -1,8 +1,8 @@
 image: maven:latest
 
 variables:
-  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -s .m2/settings.xml -DbuildNumber=b$CI_PIPELINE_IID"
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
 
 cache:
   paths:
@@ -27,5 +27,46 @@ deploy:
     - master
   artifacts:
     name: Plugin
+    expire_in: 90 days
     paths:
-    - target/*.jar
+      - target/*.jar
+
+deploy-release:
+  stage: deploy
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+  only:
+    - tags
+  artifacts:
+    name: Plugin
+    expire_in: 10 years
+    paths:
+      - target/*.jar
+
+release:
+  stage: deploy
+  when: manual
+  script:
+    # Install ssh-agent if not already installed, it is required by Docker.
+    # (change apt-get to yum if you use a CentOS-based image)
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+
+    # Run ssh-agent (inside the build environment)
+    - eval $(ssh-agent -s)
+
+    # Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+
+    - git config --global user.email "$GITLAB_USER_EMAIL"
+    - git config --global user.name "$GITLAB_USER_NAME"
+
+    # For Docker builds disable host key checking. Be aware that by adding that
+    # you are susceptible to man-in-the-middle attacks.
+    # WARNING: Use this only with the Docker executor, if you use it with shell
+    # you will overwrite your user's SSH config.
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - git checkout -B "$CI_BUILD_REF_NAME"
+    - mvn $MAVEN_CLI_OPTS release:prepare release:perform
+  only:
+    - master

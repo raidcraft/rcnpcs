@@ -3,5 +3,6 @@ main: de.raidcraft.npcs.RCNPCsPlugin
 version: ${project.version}#${build.number}
 author: Silthus
 website: www.raid-craft.de
-depend: [RaidCraft-API]
+depend: [RaidCraft-API, Citizens]
 database: true
+api-version: 1.13

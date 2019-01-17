@@ -5,8 +5,10 @@ import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.quests.RCQuestConfigsLoaded;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.CitizensPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Plugin for testing various stuff and creating proof of concepts.
@@ -21,9 +23,12 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
     public void enable() {
         this.config = configure(new LocalConfiguration(this));
         registerEvents(this);
-        registerCommands(NpcCommands.class);
 
         store = new CustomNPCDataStore(this);
+        CitizensPlugin plugin = (CitizensPlugin) CitizensAPI.getPlugin();
+        if (plugin != null) {
+            plugin.setDefaultNPCDataStore(store);
+        }
         CitizensAPI.createNamedNPCRegistry(getName(), store);
     }
 
