@@ -139,7 +139,7 @@ public class CustomNPCDataStore implements NPCDataStore {
     @Override
     public void store(NPC npc) {
         SimpleConfiguration<RCNPCsPlugin> npcConfig = getPlugin()
-                .configure(new SimpleConfiguration<>(getPlugin(), new File("new-npcs", npc.getId() + "-" + npc.getFullName() + ".npc.yml")));
+                .configure(new SimpleConfiguration<>(getPlugin(), new File(getPlugin().getNewNpcsPath(), npc.getId() + "-" + npc.getFullName() + ".npc.yml")));
         YamlStorage storage = new YamlStorage(npcConfig.getFile());
         if (!storage.load()) {
             getPlugin().getLogger().severe("Unable to save NPC " + npc.getName() + " (" + npc.getId() + ") to disk!");
