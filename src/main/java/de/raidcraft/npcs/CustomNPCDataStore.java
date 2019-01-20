@@ -23,7 +23,7 @@ import java.util.UUID;
 public class CustomNPCDataStore implements NPCDataStore {
 
     private final RCNPCsPlugin plugin;
-    private final Map<String, ConfigurationBase> loadedNPCConfigs = new CaseInsensitiveMap<>();
+    private final Map<String, ConfigStorage> loadedNPCConfigs = new CaseInsensitiveMap<>();
     private final Map<Integer, String> idToPathMapping = new HashMap<>();
     private int lastCreatedNPCId = -1;
     private boolean loaded = false;
@@ -48,14 +48,17 @@ public class CustomNPCDataStore implements NPCDataStore {
             getPlugin().getLogger().warning("NPC with id " + id + " already exists!");
             return;
         }
-        config.load();
-        if (!config.getBoolean("enabled", true)) {
-            getPlugin().getLogger().info("NOT loading " + id + ": DISABLED");
+        ConfigStorage storage = new ConfigStorage(config);
+        storage.load();
+
+        DataKey dataKey = storage.getKey("");
+        if (!dataKey.getBoolean("enabled", true)) {
+            getPlugin().getLogger().info(id + " NOT ENABLED.");
             return;
         }
-        this.loadedNPCConfigs.put(id, config);
+        this.loadedNPCConfigs.put(id, storage);
         if (isLoaded()) {
-            loadNpcFromConfig(CitizensAPI.getNPCRegistry(), id, new ConfigDataKey(config));
+            loadNpcFromConfig(CitizensAPI.getNPCRegistry(), id, dataKey);
         }
     }
 
@@ -67,9 +70,9 @@ public class CustomNPCDataStore implements NPCDataStore {
     }
 
     private void unloadNpcConfig(String id) {
-        ConfigurationBase config = this.loadedNPCConfigs.remove(id);
+        ConfigStorage config = this.loadedNPCConfigs.remove(id);
         if (config != null) {
-            config.set("enabled", false);
+            config.getConfig().set("enabled", false);
             config.save();
         }
     }
@@ -95,8 +98,8 @@ public class CustomNPCDataStore implements NPCDataStore {
     public void loadInto(NPCRegistry registry) {
         for (String id : getLoadedNPCConfigs().keySet()) {
             try {
-                ConfigurationBase config = getLoadedNPCConfigs().get(id);
-                ConfigDataKey dataKey = new ConfigDataKey(config);
+                ConfigStorage config = getLoadedNPCConfigs().get(id);
+                DataKey dataKey = config.getKey("");
                 if (!dataKey.keyExists("name")) {
                     getPlugin().getLogger().warning("NPC " + config.getFile().getAbsolutePath() + " has no name defined!");
                     continue;
@@ -111,9 +114,9 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void saveToDisk() {
-        final ConfigurationBase[] configs = getLoadedNPCConfigs().values().toArray(new ConfigurationBase[0]);
+        final ConfigStorage[] configs = getLoadedNPCConfigs().values().toArray(new ConfigStorage[0]);
         new Thread(() -> {
-            for (ConfigurationBase config : configs) {
+            for (ConfigStorage config : configs) {
                 config.save();
             }
         }).start();
@@ -121,20 +124,24 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void saveToDiskImmediate() {
-        getLoadedNPCConfigs().values().forEach(ConfigurationBase::save);
+        getLoadedNPCConfigs().values().forEach(ConfigStorage::save);
     }
 
     @Override
     public void store(NPC npc) {
-        String id = npc.getId() + "-" + npc.getFullName();
-        File file = new File(getPlugin().getNewNpcsPath(), id + ".npc.yml");
-        SimpleConfiguration<RCNPCsPlugin> npcConfig = getPlugin()
-                .configure(new SimpleConfiguration<>(getPlugin(), file));
+        String id = idToPathMapping.containsKey(npc.getId()) ? idToPathMapping.get(npc.getId()) : npc.getId() + "-" + npc.getFullName();
+        ConfigStorage npcConfig;
+        if (loadedNPCConfigs.containsKey(id)) {
+            npcConfig = loadedNPCConfigs.get(id);
+        } else {
+            File file = new File(getPlugin().getNewNpcsPath(), id + ".npc.yml");
+            npcConfig = new ConfigStorage(getPlugin().configure(new SimpleConfiguration<>(getPlugin(), file)));
+            loadedNPCConfigs.put(id, npcConfig);
+            idToPathMapping.put(npc.getId(), id);
+        }
 
-        loadedNPCConfigs.put(id, npcConfig);
-        idToPathMapping.put(npc.getId(), id);
-        npc.save(new ConfigDataKey(npcConfig));
-        getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getName());
+        npc.save(npcConfig.getKey(""));
+        getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getConfig().getName());
     }
 
     @Override
@@ -147,7 +154,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void reloadFromSource() {
-        getLoadedNPCConfigs().values().forEach(ConfigurationBase::load);
+        getLoadedNPCConfigs().values().forEach(ConfigStorage::load);
         getPlugin().getLogger().info("Reloaded Custom NPC Stores from disk.");
     }
 

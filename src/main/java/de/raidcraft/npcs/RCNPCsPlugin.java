@@ -53,9 +53,9 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
 
     public class LocalConfiguration extends ConfigurationBase<RCNPCsPlugin> {
 
-        @Setting("new-npc-path")
+        @Setting("npcs-path")
         @Comment("Path to a directory where newly created NPCs are stored after calling /citizens save.")
-        public String newNpcPath = "new-npcs";
+        public String newNpcPath = "npcs";
 
         public LocalConfiguration(RCNPCsPlugin plugin) {
             super(plugin, "config.yml");
