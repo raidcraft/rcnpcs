@@ -5,23 +5,16 @@ import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.config.SimpleConfiguration;
 import de.raidcraft.api.quests.Quests;
 import de.raidcraft.util.CaseInsensitiveMap;
-import de.raidcraft.util.ConfigUtil;
 import lombok.Data;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCDataStore;
 import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.api.util.DataKey;
-import net.citizensnpcs.api.util.YamlStorage;
 import org.apache.commons.lang3.Validate;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 
 import java.io.File;
-import java.io.InvalidObjectException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +23,7 @@ import java.util.UUID;
 public class CustomNPCDataStore implements NPCDataStore {
 
     private final RCNPCsPlugin plugin;
-    private final Map<String, YamlStorage> loadedNPCConfigs = new CaseInsensitiveMap<>();
+    private final Map<String, ConfigurationBase> loadedNPCConfigs = new CaseInsensitiveMap<>();
     private final Map<Integer, String> idToPathMapping = new HashMap<>();
     private int lastCreatedNPCId = -1;
     private boolean loaded = false;
@@ -55,14 +48,14 @@ public class CustomNPCDataStore implements NPCDataStore {
             getPlugin().getLogger().warning("NPC with id " + id + " already exists!");
             return;
         }
-        YamlStorage storage = new YamlStorage(config.getFile());
-        if (!storage.load()) {
-            getPlugin().getLogger().warning("Failed to load NPC " + id + " from disk.");
+        config.load();
+        if (!config.getBoolean("enabled", true)) {
+            getPlugin().getLogger().info("NOT loading " + id + ": DISABLED");
             return;
         }
-        this.loadedNPCConfigs.put(id, storage);
+        this.loadedNPCConfigs.put(id, config);
         if (isLoaded()) {
-            loadNpcFromConfig(CitizensAPI.getNPCRegistry(), id, storage.getKey(""));
+            loadNpcFromConfig(CitizensAPI.getNPCRegistry(), id, new ConfigDataKey(config));
         }
     }
 
@@ -74,9 +67,9 @@ public class CustomNPCDataStore implements NPCDataStore {
     }
 
     private void unloadNpcConfig(String id) {
-        YamlStorage config = this.loadedNPCConfigs.remove(id);
+        ConfigurationBase config = this.loadedNPCConfigs.remove(id);
         if (config != null) {
-            config.getKey("").setBoolean("enabled", false);
+            config.set("enabled", false);
             config.save();
         }
     }
@@ -102,15 +95,10 @@ public class CustomNPCDataStore implements NPCDataStore {
     public void loadInto(NPCRegistry registry) {
         for (String id : getLoadedNPCConfigs().keySet()) {
             try {
-                YamlStorage config = getLoadedNPCConfigs().get(id);
-                YamlStorage.YamlKey dataKey = config.getKey("");
+                ConfigurationBase config = getLoadedNPCConfigs().get(id);
+                ConfigDataKey dataKey = new ConfigDataKey(config);
                 if (!dataKey.keyExists("name")) {
                     getPlugin().getLogger().warning("NPC " + config.getFile().getAbsolutePath() + " has no name defined!");
-                    continue;
-                }
-                YamlStorage storage = new YamlStorage(config.getFile());
-                if (!storage.load()) {
-                    getPlugin().getLogger().severe("Failed to load NPC config for " + config.getFile().getAbsolutePath());
                     continue;
                 }
                 loadNpcFromConfig(registry, id, dataKey);
@@ -123,9 +111,9 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void saveToDisk() {
-        final YamlStorage[] configs = getLoadedNPCConfigs().values().toArray(new YamlStorage[0]);
+        final ConfigurationBase[] configs = getLoadedNPCConfigs().values().toArray(new ConfigurationBase[0]);
         new Thread(() -> {
-            for (YamlStorage config : configs) {
+            for (ConfigurationBase config : configs) {
                 config.save();
             }
         }).start();
@@ -133,19 +121,19 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void saveToDiskImmediate() {
-        getLoadedNPCConfigs().values().forEach(YamlStorage::save);
+        getLoadedNPCConfigs().values().forEach(ConfigurationBase::save);
     }
 
     @Override
     public void store(NPC npc) {
+        String id = npc.getId() + "-" + npc.getFullName();
+        File file = new File(getPlugin().getNewNpcsPath(), id + ".npc.yml");
         SimpleConfiguration<RCNPCsPlugin> npcConfig = getPlugin()
-                .configure(new SimpleConfiguration<>(getPlugin(), new File(getPlugin().getNewNpcsPath(), npc.getId() + "-" + npc.getFullName() + ".npc.yml")));
-        YamlStorage storage = new YamlStorage(npcConfig.getFile());
-        if (!storage.load()) {
-            getPlugin().getLogger().severe("Unable to save NPC " + npc.getName() + " (" + npc.getId() + ") to disk!");
-            return;
-        }
-        npc.save(storage.getKey(""));
+                .configure(new SimpleConfiguration<>(getPlugin(), file));
+
+        loadedNPCConfigs.put(id, npcConfig);
+        idToPathMapping.put(npc.getId(), id);
+        npc.save(new ConfigDataKey(npcConfig));
         getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getName());
     }
 
@@ -159,7 +147,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void reloadFromSource() {
-        getLoadedNPCConfigs().values().forEach(YamlStorage::load);
+        getLoadedNPCConfigs().values().forEach(ConfigurationBase::load);
         getPlugin().getLogger().info("Reloaded Custom NPC Stores from disk.");
     }
 
