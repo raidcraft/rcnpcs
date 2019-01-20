@@ -5,15 +5,14 @@ import de.raidcraft.api.config.Comment;
 import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.config.Setting;
 import de.raidcraft.api.quests.RCQuestConfigsLoaded;
+import de.raidcraft.util.ConfigUtil;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.CitizensPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.nio.file.Paths;
 
 /**
  * Plugin for testing various stuff and creating proof of concepts.
@@ -30,7 +29,7 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
         this.config = configure(new LocalConfiguration(this));
         registerEvents(this);
 
-        newNpcsPath = new File(getDataFolder(), getConfig().newNpcPath);
+        newNpcsPath = new File(getDataFolder(), getConfig().npcPath);
         newNpcsPath.mkdirs();
 
         store = new CustomNPCDataStore(this);
@@ -55,7 +54,7 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
 
         @Setting("npcs-path")
         @Comment("Path to a directory where newly created NPCs are stored after calling /citizens save.")
-        public String newNpcPath = "npcs";
+        public String npcPath = "npcs";
 
         public LocalConfiguration(RCNPCsPlugin plugin) {
             super(plugin, "config.yml");

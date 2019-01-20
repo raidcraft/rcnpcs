@@ -5,6 +5,7 @@ import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.config.SimpleConfiguration;
 import de.raidcraft.api.quests.Quests;
 import de.raidcraft.util.CaseInsensitiveMap;
+import de.raidcraft.util.ConfigUtil;
 import lombok.Data;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -30,7 +31,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     public CustomNPCDataStore(RCNPCsPlugin plugin) {
         this.plugin = plugin;
-        Quests.registerQuestLoader(new ConfigLoader<RCNPCsPlugin>(plugin, "npc", 50) {
+        ConfigLoader<RCNPCsPlugin> configLoader = new ConfigLoader<RCNPCsPlugin>(plugin, "npc", 50) {
             @Override
             public void loadConfig(String id, ConfigurationBase<RCNPCsPlugin> config) {
                 loadNpcConfig(id, config);
@@ -40,7 +41,9 @@ public class CustomNPCDataStore implements NPCDataStore {
             public void unloadConfig(String id) {
                 unloadNpcConfig(id);
             }
-        });
+        };
+        Quests.registerQuestLoader(configLoader);
+        ConfigUtil.loadRecursiveConfigs(plugin, plugin.getConfig().npcPath, configLoader);
     }
 
     private void loadNpcConfig(String id, ConfigurationBase config) {
@@ -64,7 +67,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     private void loadNpcFromConfig(NPCRegistry registry, String id, DataKey dataKey) {
         EntityType entityType = matchEntityType(dataKey.getString("traits.type", "PLAYER"));
-        NPC npc = registry.createNPC(entityType, UUID.randomUUID(), ++lastCreatedNPCId, dataKey.getString("name"));
+        NPC npc = registry.createNPC(entityType, UUID.randomUUID(), createUniqueNPCId(registry), dataKey.getString("name"));
         idToPathMapping.put(npc.getId(), id);
         npc.load(dataKey);
     }
@@ -91,7 +94,10 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public int createUniqueNPCId(NPCRegistry registry) {
-        return ++lastCreatedNPCId;
+        while (registry.getById(lastCreatedNPCId) != null) {
+            lastCreatedNPCId++;
+        }
+        return lastCreatedNPCId;
     }
 
     @Override
@@ -129,7 +135,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void store(NPC npc) {
-        String id = idToPathMapping.containsKey(npc.getId()) ? idToPathMapping.get(npc.getId()) : npc.getId() + "-" + npc.getFullName();
+        String id = idToPathMapping.containsKey(npc.getId()) ? idToPathMapping.get(npc.getId()) : npc.getUniqueId() + "-" + npc.getFullName();
         ConfigStorage npcConfig;
         if (loadedNPCConfigs.containsKey(id)) {
             npcConfig = loadedNPCConfigs.get(id);
@@ -141,7 +147,7 @@ public class CustomNPCDataStore implements NPCDataStore {
         }
 
         npc.save(npcConfig.getKey(""));
-        getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getConfig().getName());
+        getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getFile().getName());
     }
 
     @Override
