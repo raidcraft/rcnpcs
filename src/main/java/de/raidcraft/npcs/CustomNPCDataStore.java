@@ -26,7 +26,7 @@ public class CustomNPCDataStore implements NPCDataStore {
     private final RCNPCsPlugin plugin;
     private final Map<String, ConfigStorage> loadedNPCConfigs = new CaseInsensitiveMap<>();
     private final Map<Integer, String> idToPathMapping = new HashMap<>();
-    private int lastCreatedNPCId = -1;
+    private int lastCreatedNPCId = 0;
     private boolean loaded = false;
 
     public CustomNPCDataStore(RCNPCsPlugin plugin) {
