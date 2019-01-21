@@ -4,6 +4,7 @@ import de.raidcraft.api.config.ConfigLoader;
 import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.config.SimpleConfiguration;
 import de.raidcraft.api.quests.Quests;
+import de.raidcraft.npcs.traits.ToFNPCTrait;
 import de.raidcraft.util.CaseInsensitiveMap;
 import de.raidcraft.util.ConfigUtil;
 import lombok.Data;
@@ -75,6 +76,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
         EntityType entityType = matchEntityType(dataKey.getString("traits.type", "PLAYER"));
         NPC npc = registry.createNPC(entityType, uuid, createUniqueNPCId(registry), dataKey.getString("name"));
+        addToFTrait(npc, id);
         idToPathMapping.put(npc.getId(), id);
         npc.load(dataKey);
     }
@@ -152,7 +154,7 @@ public class CustomNPCDataStore implements NPCDataStore {
             loadedNPCConfigs.put(id, npcConfig);
             idToPathMapping.put(npc.getId(), id);
         }
-
+        addToFTrait(npc, id);
         npc.save(npcConfig.getKey(""));
         getPlugin().getLogger().info("Created new NPC save file: " + npcConfig.getFile().getName());
     }
@@ -197,5 +199,11 @@ public class CustomNPCDataStore implements NPCDataStore {
             }
         }
         return type;
+    }
+
+    private static void addToFTrait(NPC npc, String pathId) {
+        ToFNPCTrait trait = new ToFNPCTrait();
+        trait.setConfigPath(pathId);
+        npc.addTrait(trait);
     }
 }
