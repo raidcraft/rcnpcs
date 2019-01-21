@@ -5,10 +5,12 @@ import de.raidcraft.api.config.Comment;
 import de.raidcraft.api.config.ConfigurationBase;
 import de.raidcraft.api.config.Setting;
 import de.raidcraft.api.quests.RCQuestConfigsLoaded;
-import de.raidcraft.util.ConfigUtil;
+import de.raidcraft.npcs.traits.DisguiseTrait;
+import de.raidcraft.npcs.traits.ToFNPCTrait;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.CitizensPlugin;
+import net.citizensnpcs.api.trait.TraitInfo;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -31,6 +33,9 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
 
         newNpcsPath = new File(getDataFolder(), getConfig().npcPath);
         newNpcsPath.mkdirs();
+
+        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(DisguiseTrait.class));
+        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(ToFNPCTrait.class));
 
         store = new CustomNPCDataStore(this);
         CitizensPlugin plugin = (CitizensPlugin) CitizensAPI.getPlugin();

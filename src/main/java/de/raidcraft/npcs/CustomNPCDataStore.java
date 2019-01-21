@@ -47,7 +47,7 @@ public class CustomNPCDataStore implements NPCDataStore {
         ConfigUtil.loadRecursiveConfigs(plugin, plugin.getConfig().npcPath, configLoader);
     }
 
-    private void loadNpcConfig(String id, ConfigurationBase config) {
+    public void loadNpcConfig(String id, ConfigurationBase config) {
         if (loadedNPCConfigs.containsKey(id)) {
             getPlugin().getLogger().warning("NPC with id " + id + " already exists!");
             return;
