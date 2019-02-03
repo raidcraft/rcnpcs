@@ -69,13 +69,13 @@ public class CustomNPCDataStore implements NPCDataStore {
     private void loadNpcFromConfig(NPCRegistry registry, String id, DataKey dataKey) {
         UUID uuid = UUID.fromString(dataKey.getString("uuid", UUID.randomUUID().toString()));
 
-        if (registry.getByUniqueId(uuid) != null) {
-            getPlugin().getLogger().warning("NPC " + id + " with UUID " + uuid + " already loaded!");
-            return;
+        NPC npc = registry.getByUniqueId(uuid);
+
+        if (npc == null) {
+            EntityType entityType = matchEntityType(dataKey.getString("traits.type", "PLAYER"));
+            npc = registry.createNPC(entityType, uuid, createUniqueNPCId(registry), dataKey.getString("name"));
         }
 
-        EntityType entityType = matchEntityType(dataKey.getString("traits.type", "PLAYER"));
-        NPC npc = registry.createNPC(entityType, uuid, createUniqueNPCId(registry), dataKey.getString("name"));
         addToFTrait(npc, id);
         idToPathMapping.put(npc.getId(), id);
         npc.load(dataKey);
