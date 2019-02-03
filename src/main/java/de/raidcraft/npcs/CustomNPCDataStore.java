@@ -144,7 +144,7 @@ public class CustomNPCDataStore implements NPCDataStore {
 
     @Override
     public void store(NPC npc) {
-        String id = idToPathMapping.containsKey(npc.getId()) ? idToPathMapping.get(npc.getId()) : npc.getUniqueId() + "-" + npc.getFullName();
+        String id = idToPathMapping.containsKey(npc.getId()) ? idToPathMapping.get(npc.getId()) : npc.getFullName() + npc.getUniqueId();
         ConfigStorage npcConfig;
         if (loadedNPCConfigs.containsKey(id)) {
             npcConfig = loadedNPCConfigs.get(id);
