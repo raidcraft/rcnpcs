@@ -47,7 +47,10 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
 
     @Override
     public void disable() {
+        unregisterEvents(this);
         getStore().saveToDiskImmediate();
+        CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(DisguiseTrait.class));
+        CitizensAPI.getTraitFactory().deregisterTrait(TraitInfo.create(ToFNPCTrait.class));
     }
 
     @EventHandler

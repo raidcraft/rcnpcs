@@ -2,6 +2,7 @@ package de.raidcraft.npcs;
 
 import de.raidcraft.api.config.ConfigurationBase;
 import lombok.Data;
+import lombok.Getter;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.FileStorage;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,9 +16,11 @@ import java.util.Map;
 @Data
 public class ConfigStorage implements FileStorage {
 
+    private final String id;
     private final ConfigurationBase config;
 
-    public ConfigStorage(ConfigurationBase config) {
+    public ConfigStorage(String id, ConfigurationBase config) {
+        this.id = id;
         this.config = config;
     }
 
@@ -28,7 +31,7 @@ public class ConfigStorage implements FileStorage {
 
     @Override
     public DataKey getKey(String root) {
-        return new YamlKey(root);
+        return new YamlKey(getId(), root);
     }
 
     @Override
@@ -47,8 +50,13 @@ public class ConfigStorage implements FileStorage {
     }
 
     public class YamlKey extends DataKey {
-        public YamlKey(String root) {
+
+        @Getter
+        private final String id;
+
+        public YamlKey(String id, String root) {
             super(root);
+            this.id = id;
         }
 
         @Override
@@ -152,7 +160,7 @@ public class ConfigStorage implements FileStorage {
         public YamlKey getRelative(String relative) {
             if (relative == null || relative.isEmpty())
                 return this;
-            return new YamlKey(createRelativeKey(relative));
+            return new YamlKey(getId(), createRelativeKey(relative));
         }
 
         public ConfigStorage getStorage() {

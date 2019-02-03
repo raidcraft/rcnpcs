@@ -52,7 +52,7 @@ public class CustomNPCDataStore implements NPCDataStore {
             getPlugin().getLogger().warning("NPC with id " + id + " already exists!");
             return;
         }
-        ConfigStorage storage = new ConfigStorage(config);
+        ConfigStorage storage = new ConfigStorage(id, config);
         storage.load();
 
         DataKey dataKey = storage.getKey("");
@@ -150,7 +150,7 @@ public class CustomNPCDataStore implements NPCDataStore {
             npcConfig = loadedNPCConfigs.get(id);
         } else {
             File file = new File(getPlugin().getNewNpcsPath(), id + ".npc.yml");
-            npcConfig = new ConfigStorage(getPlugin().configure(new SimpleConfiguration<>(getPlugin(), file)));
+            npcConfig = new ConfigStorage(id, getPlugin().configure(new SimpleConfiguration<>(getPlugin(), file)));
             loadedNPCConfigs.put(id, npcConfig);
             idToPathMapping.put(npc.getId(), id);
         }
