@@ -34,15 +34,15 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
         newNpcsPath = new File(getDataFolder(), getConfig().npcPath);
         newNpcsPath.mkdirs();
 
+        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(DisguiseTrait.class));
+        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(ToFNPCTrait.class));
+
         store = new CustomNPCDataStore(this);
         CitizensPlugin plugin = (CitizensPlugin) CitizensAPI.getPlugin();
         if (plugin != null) {
             plugin.setDefaultNPCDataStore(store);
             getLogger().info("Enabled custom default NPC data store!");
         }
-
-        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(DisguiseTrait.class));
-        CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(ToFNPCTrait.class));
     }
 
     @Override
