@@ -62,12 +62,6 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
         getStore().loadInto(CitizensAPI.getNPCRegistry());
     }
 
-    @EventHandler
-    public void onNpcCreation(NPCCreateEvent event) {
-
-        getStore().store(event.getNPC());
-    }
-
     public class LocalConfiguration extends ConfigurationBase<RCNPCsPlugin> {
 
         @Setting("npcs-path")
