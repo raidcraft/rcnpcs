@@ -10,6 +10,7 @@ import de.raidcraft.npcs.traits.ToFNPCTrait;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.CitizensPlugin;
+import net.citizensnpcs.api.event.NPCCreateEvent;
 import net.citizensnpcs.api.trait.TraitInfo;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,6 +22,8 @@ import java.io.File;
  */
 @Getter
 public class RCNPCsPlugin extends BasePlugin implements Listener {
+
+    public static final String NPC_TOF_ID = "tof-id";
 
     private CustomNPCDataStore store;
     private LocalConfiguration config;
@@ -57,6 +60,12 @@ public class RCNPCsPlugin extends BasePlugin implements Listener {
     public void onQuestConfigsLoaded(RCQuestConfigsLoaded event) {
 
         getStore().loadInto(CitizensAPI.getNPCRegistry());
+    }
+
+    @EventHandler
+    public void onNpcCreation(NPCCreateEvent event) {
+
+        getStore().store(event.getNPC());
     }
 
     public class LocalConfiguration extends ConfigurationBase<RCNPCsPlugin> {

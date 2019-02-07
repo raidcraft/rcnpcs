@@ -205,5 +205,6 @@ public class CustomNPCDataStore implements NPCDataStore {
         ToFNPCTrait trait = new ToFNPCTrait();
         trait.setConfigPath(pathId);
         npc.addTrait(trait);
+        npc.data().set(RCNPCsPlugin.NPC_TOF_ID, pathId);
     }
 }

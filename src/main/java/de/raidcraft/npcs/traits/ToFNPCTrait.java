@@ -1,6 +1,7 @@
 package de.raidcraft.npcs.traits;
 
 import de.raidcraft.npcs.ConfigStorage;
+import de.raidcraft.npcs.RCNPCsPlugin;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.citizensnpcs.api.exception.NPCLoadException;
